@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'date'
 
 describe "Subscription" do
 
@@ -51,7 +52,7 @@ describe "Subscription" do
   AgreementAttributes = {
     "name" => "T-Shirt of the Month Club Agreement",
     "description" => "Agreement for T-Shirt of the Month Club Plan",
-    "start_date" => "2015-02-19T00:37:04Z",
+    "start_date" => (Date.today + 1).strftime('%FT%TZ'), # eg. "2015-02-19T00:37:04Z",
     "payer" => {
         "payment_method" => "paypal"
     },
