@@ -2587,6 +2587,48 @@ module PayPal::SDK
         end
       end
 
+      class Product < Base
+        def self.load_members
+          object_of :id, String
+          object_of :name, String
+          object_of :description, String
+          object_of :type, String
+          object_of :category, String
+          object_of :image_url, String
+          object_of :home_url, String
+          object_of :create_time, String
+          object_of :update_time, String
+          array_of  :links, Links
+        end
+
+        include RequestDataType
+
+        def create()
+          path = "v1/catalogs/products"
+          response = api.post(path, self.to_hash, http_header)
+          self.merge!(response)
+          success?
+        end
+      end
+
+      class Products < Base
+        def self.load_members
+          object_of :total_items, Integer
+          object_of :total_pages, Integer
+          array_of :products, Product
+          array_of :links, Links # self, next, last
+        end
+
+        include RequestDataType
+
+        # optional params include 'page', 'page_size', and 'total_required'
+        def self.list(params = {})
+          path = "v1/catalogs/products"
+          response = api.get(path, params)
+          new(response)
+        end
+      end
+
       constants.each do |data_type_klass|
         data_type_klass = const_get(data_type_klass)
         data_type_klass.load_members if defined? data_type_klass.load_members
