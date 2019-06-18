@@ -379,6 +379,17 @@ module PayPal::SDK
         end
       end
 
+      class BaseAddress2 < Base
+        def self.load_members
+          object_of :address_line_1, String
+          object_of :address_line_2, String
+          object_of :admin_area_2, String
+          object_of :admin_area_1, String
+          object_of :postal_code, String
+          object_of :country_code, String
+        end
+      end
+
       class Address < BaseAddress
         def self.load_members
           object_of :phone, String
@@ -647,6 +658,19 @@ module PayPal::SDK
           object_of :normalization_status, String
           object_of :id, String
           object_of :recipient_name, String
+        end
+      end
+
+      class ShippingAddress2 < Base
+        def self.load_members
+          object_of :name, FullName
+          object_of :address, BaseAddress2
+        end
+      end
+
+      class FullName < Base
+        def self.load_members
+          object_of :full_name, String
         end
       end
 
@@ -2071,6 +2095,7 @@ module PayPal::SDK
         end
       end
 
+      # v1/payments/billing-plans (archived)
       class Plan < Base
         def self.load_members
           object_of :id, String
@@ -2164,6 +2189,123 @@ module PayPal::SDK
           object_of :initial_fail_amount_action, String
           object_of :accepted_payment_type, String
           object_of :char_set, String
+        end
+      end
+
+      # v1/billing/plans
+      class BillingPlan < Base
+        def self.load_members
+          object_of :id, String
+          object_of :product_id, String
+          object_of :name, String
+          object_of :description, String
+          array_of :billing_cycles, BillingCycle
+          object_of :payment_preferences, PaymentPreferences
+          object_of :quantity_supported, Boolean
+          object_of :taxes, Tax
+        end
+
+        include RequestDataType
+
+        def create()
+          path = "v1/billing/plans/"
+          response = api.post(path, self.to_hash, http_header)
+          self.merge!(response)
+          success?
+        end
+      end
+
+      class BillingCycle < Base
+        def self.load_members
+          object_of :frequency, Frequency
+          object_of :tenure_type, String
+          object_of :sequence, Integer
+          object_of :total_cycles, Integer
+          object_of :pricing_scheme, PricingScheme
+        end
+      end
+
+      class Frequency < Base
+        def self.load_members
+          object_of :interval_unit, String
+          object_of :interval_count, Integer
+        end
+      end
+
+      class PricingScheme < Base
+        def self.load_members
+          object_of :fixed_price, Money
+        end
+      end
+
+      # https://developer.paypal.com/docs/api/subscriptions/v1/#definition-payment_preferences
+      class PaymentPreferences < Base
+        def self.load_members
+          object_of :service_type, String
+          object_of :auto_bill_outstanding, Boolean # default: true
+          object_of :setup_fee, Money
+          object_of :setup_fee_failure_action, String # CANCEL(default)|CONTINUE
+          object_of :payment_failure_threshold, Integer # default: 0
+        end
+      end
+
+      # https://developer.paypal.com/docs/api/subscriptions/v1/#subscriptions
+      class Subscription < Base
+        def self.load_members
+          object_of :id, String
+          object_of :plan_id, String
+          object_of :start_time, DateTime # default: Time.now
+          object_of :status, String
+          object_of :status_update_time, DateTime
+          object_of :quantity, Integer
+          object_of :shipping_amount, Money
+          object_of :subscriber, Subscriber
+          object_of :auto_renewal, Boolean
+          object_of :application_context, ApplicationContext
+        end
+
+        include RequestDataType
+
+        def create()
+          path = "v1/billing/subscriptions/"
+          response = api.post(path, self.to_hash, http_header)
+          self.merge!(response)
+          success?
+        end
+      end
+
+      class Subscriber < Base
+        def self.load_members
+          object_of :name, SubscriberName
+          object_of :email_address, String
+          object_of :shipping_address, ShippingAddress2
+        end
+      end
+
+      class SubscriberName < Base
+        def self.load_members
+          object_of :given_name, String
+          object_of :surname, String
+        end
+      end
+
+      # https://developer.paypal.com/docs/api/subscriptions/v1/#definition-application_context
+      class ApplicationContext < Base
+        def self.load_members
+          object_of :brand_name, String
+          object_of :locale, String
+          object_of :shipping_preference, String # GET_FROM_FILE(default)|NO_SHIPPING|SET_PROVIDED_ADDRESS
+          object_of :user_action, String
+          object_of :payment_method, PaymentMethod
+          object_of :return_url, String
+          object_of :cancel_url, String
+        end
+      end
+
+      class PaymentMethod < Base
+        def self.load_members
+          object_of :payer_selected, String
+          object_of :payee_preferred, String
         end
       end
 
@@ -2589,10 +2731,10 @@ module PayPal::SDK
 
       class Product < Base
         def self.load_members
-          object_of :id, String
+          object_of :id, String # 6-50 chars. Default: system generated, prefixed with PROD-
           object_of :name, String
           object_of :description, String
-          object_of :type, String
+          object_of :type, String # PHYSICAL|DIGITAL|SERVICE
           object_of :category, String
           object_of :image_url, String
           object_of :home_url, String
@@ -2611,6 +2753,7 @@ module PayPal::SDK
         end
       end
 
+      # https://developer.paypal.com/docs/api/catalog-products/v1/
       class Products < Base
         def self.load_members
           object_of :total_items, Integer
