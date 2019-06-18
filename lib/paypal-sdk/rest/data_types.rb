@@ -2770,6 +2770,15 @@ module PayPal::SDK
           response = api.get(path, params)
           new(response)
         end
+
+        def next
+          link = links.detect { |l| l.rel == 'next' }
+          if link
+            uri = URI.parse(link.href)
+            response = api.api_call(method: :get, uri: uri, header: {})
+            self.class.new(response)
+          end
+        end
       end
 
       constants.each do |data_type_klass|

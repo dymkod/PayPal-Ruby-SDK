@@ -115,6 +115,13 @@ describe PayPal::SDK::REST::BillingPlan do
     expect(page.total_pages).to be >= 0
   end
 
+  it "paginates" do
+    page = PayPal::SDK::REST::Products.list('page_size' => 1, 'total_required' => true)
+    page = page.next
+
+    expect(page.products.size).to be >= 0
+  end
+
   it "creates a product, plan and subscription" do
     product = PayPal::SDK::REST::Product.new(ProductAttributes)
     expect(product.create).to be true
